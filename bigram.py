@@ -75,7 +75,7 @@ class BigramLanguageModel(nn.Module):
     
     # idx is x in get_batch()
     # targets is y in get_batch()
-    def forward(self, idx, targets=None):    
+    def forward(self, idx, targets=None):
         logits = self.token_embedding_table(idx) # (B, T, C), C = 65，在使用input.txt時
 
         if targets is None:
