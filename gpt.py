@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-
+import os
 
 batch_size = 64 
 block_size = 256 
@@ -14,9 +14,9 @@ n_embd = 384
 n_head = 6
 n_layer = 6
 dropout = 0.2
+pretrain = None
 
-
-torch.manual_seed(1337)
+torch.manual_seed(2187)
 
 
 with open('input.txt', 'r', encoding='utf-8') as f:
@@ -194,26 +194,26 @@ m = model.to(device)
 
 print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
+if pretrain != None:
+    checkpoints = torch.load(os.path.join("checkpoints", pretrain))
+    m.load_state_dict(checkpoints)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 for iter in range(max_iters):
-
-    
     if iter % eval_interval == 0 or iter == max_iters - 1:
         losses = estimate_loss()
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        torch.save(model.state_dict(), os.path.join("checkpoints", f"epoch_{iter}.pth"))
 
-    
     xb, yb = get_batch('train')
 
-    
     logits, loss = model(xb, yb)
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
 
 
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+# context = torch.zeros((1, 1), dtype=torch.long, device=device)
+# print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
 
